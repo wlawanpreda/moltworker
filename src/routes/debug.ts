@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../types';
 import { findExistingMoltbotProcess, waitForProcess } from '../gateway';
 
@@ -33,6 +33,32 @@ debug.get('/version', async (c) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return c.json({ status: 'error', message: `Failed to get version info: ${errorMessage}` }, 500);
   }
+});
+
+// GET /debug/jwt - Dumps the raw JWT and headers for debugging
+debug.get('/jwt', async (c: Context<AppEnv>) => {
+  const jwt = c.req.header('CF-Access-JWT-Assertion') || 'Missing';
+  const cookie = c.req.header('Cookie') || 'Missing';
+  
+  // Base64 decode without verification to see claims
+  let decoded = null;
+  if (jwt !== 'Missing') {
+    try {
+      const parts = jwt.split('.');
+      if (parts.length === 3) {
+        decoded = JSON.parse(atob(parts[1]));
+      }
+    } catch (e) {
+      decoded = { error: 'Failed to decode payload' };
+    }
+  }
+
+  return c.json({
+    has_jwt_header: jwt !== 'Missing',
+    jwt_preview: jwt !== 'Missing' ? `${jwt.slice(0, 50)}...` : null,
+    jwt_payload: decoded,
+    all_headers: Object.fromEntries(c.req.raw.headers.entries()),
+  });
 });
 
 // GET /debug/processes - List all processes with optional logs
