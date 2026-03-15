@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "moltworker",
+  "account_id": "b95f7162e46ba41fd758617f3749ea51",
   "main": "src/index.ts",
   "compatibility_date": "2025-05-06",
   "compatibility_flags": [
